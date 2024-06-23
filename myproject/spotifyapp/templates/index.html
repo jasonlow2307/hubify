@@ -1,0 +1,237 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{% static 'favicon_background.png' %}" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #1db954;
+            color: white;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 0 15px;
+        }
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+        .content {
+            padding: 20px;
+        }
+        .top-artist {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            font-size: 24px;
+        }
+        .top-artist img {
+            border-radius: 50%;
+            margin-right: 20px;
+        }
+        .dashboard {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .chart, .top-songs, .recently_played {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            flex: 1;
+            min-width: 250px;
+            max-width: 500px;
+            color: white;
+        }
+        .chart {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+        .top-songs ul {
+            list-style: none;
+            padding: 0;
+        }
+        .top-songs li {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .nav-left{
+            display: flex;
+            align-items: center;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="navbar">
+        <div class="nav-left">
+            <img src="{% static 'favicon.png' %}" alt="Favicon" style="height: 30px; margin-right: 10px">
+            <a href="#home">Home</a>
+            <a href="/top_songs_query">Top Songs</a>
+            <a href="/spotimatch">Spotimatch</a>
+            <a href="/gotify">Gotify</a>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="top-artist">
+            <img src="{{ top_artist.image_url }}" alt="Top Artist Image" width="100" height="100">
+            {{ top_artist.name }}
+        </div>
+        
+        <div class="dashboard">
+            <div class="chart">
+                <canvas id="pieChart"></canvas>
+            </div>
+            <div class="chart">
+                <canvas id="barChart"></canvas>
+            </div>
+            <div class="top-songs">
+                <h2>Top Songs</h2>
+                <ul>
+                    {% for track in top_tracks %}
+                    <table>
+                        <tr>
+                            <td>
+                                <img 
+                                    src="{{ track.image_url }}" 
+                                    alt="Track Image" 
+                                    width="50" 
+                                    height="50" 
+                                    onclick="togglePlay('{{ track.track_url }}', this)">
+                            </td>
+                            <td style="padding-left: 15px;">{{ track.name }} - {{ track.artist }}</td>
+                        </tr>
+                    </table>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="recently_played">
+                <h2>Recently Played Songs</h2>
+                <ul>
+                    {% for track in recently_played %}
+                    <table>
+                        <tr>
+                            <td>
+                                <img 
+                                    src="{{ track.image_url }}" 
+                                    alt="Track Image" 
+                                    width="50" 
+                                    height="50" 
+                                    onclick="togglePlay('{{ track.track_url }}', this)">
+                            </td>
+                            <td style="padding-left: 15px;">{{ track.name }} - {{ track.artist }}</td>
+                        </tr>
+                    </table>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAudio = null;
+
+        function togglePlay(trackUrl, imgElement) {
+            if (currentAudio && currentAudio.src === trackUrl) {
+                // Toggle play/pause if the same track is clicked
+                if (currentAudio.paused) {
+                    currentAudio.play();
+                } else {
+                    currentAudio.pause();
+                }
+            } else {
+                // Pause and reset current audio if different track is clicked
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+                currentAudio = new Audio(trackUrl);
+                currentAudio.play();
+                currentAudio.addEventListener('ended', () => currentAudio = null);
+            }
+        }
+
+        // Extract artist names and counts from Django template context
+        const artistNames = [
+            {% for artist in artist_counts %}
+                '{{ artist.0 }}',
+            {% endfor %}
+        ];
+
+        const artistCounts = [
+            {% for artist in artist_counts %}
+                {{ artist.1 }},
+            {% endfor %}
+        ];
+
+        // Bar Chart
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: artistNames,
+                datasets: [{
+                    label: 'Number of Plays',
+                    data: artistCounts,
+                    backgroundColor: '#1db954',
+                    borderColor: '#1db954',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Pie Chart
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: artistNames,
+                datasets: [{
+                    label: 'Number of Plays',
+                    data: artistCounts,
+                    backgroundColor: [
+                        '#1db954',
+                        '#1ed760',
+                        '#1aa34a',
+                        '#1db954',
+                        '#1ed760',
+                        '#1aa34a',
+                        '#1db954',
+                        '#1ed760',
+                        '#1aa34a',
+                        '#1db954',
+                    ],
+                    borderColor: '#121212',
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{% static 'favicon_background.png' %}" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Song Tinder</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .card {
+            position: relative;
+            width: 300px;
+            background-color: #1e1e1e;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border-radius: 10px;
+            height: auto;
+            text-align: center;
+            color: white;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            padding-bottom: 20px; /* Add some padding at the bottom */
+            border-radius: 10px;
+        }
+        .card img {
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+        .card .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .card .artist {
+            font-size: 18px;
+            color: #b3b3b3;
+        }
+        .actions {
+            position: relative;
+            width: 90%;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            padding: 0 10px;
+        }
+        .actions button {
+            flex: 1;
+            background-color: #1db954;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .actions button:hover {
+            background-color: #1aa34a;
+        }
+        .dropdown-container {
+            display: none; /* Hidden by default */
+            width: 100%;
+            text-align: center;
+            position: static; /* Change from absolute to static */
+            margin-top: 10px; /* Add some margin at the top */
+        }
+        .dropdown {
+            background-color: #1e1e1e;
+            color: white;
+            border: 1px solid #1db954;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            width: 80%;
+            cursor: pointer;
+        }
+        .dropdown option {
+            background-color: #1e1e1e;
+            color: white;
+        }
+        #confirm-add-button {
+            background-color: #1db954;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #confirm-add-button:hover {
+            background-color: #1aa34a;
+        }
+    </style>
+</head>
+<body>
+    <div class="card" id="card">
+        <img id="album-art" src="{{ current_track.image_url }}" alt="Album Art">
+        <div id="track-name" class="title">{{ current_track.name }}</div>
+        <div id="artist-name" class="artist">{{ current_track.artist.name }}</div>
+        <div id="preview" class="artist"></div>
+        <div class="actions">
+            <button id="dislike-button">Bad</button>
+            <button id="like-button">Good</button>
+            <button id="add-to-playlist-button">Add To Playlist</button>
+        </div>
+        <div class="dropdown-container" id="dropdown-container">
+            <select id="playlist-dropdown" class="dropdown">
+                <!-- Options will be populated by JavaScript -->
+            </select>
+            <button id="confirm-add-button">Confirm Add</button>
+        </div>
+    </div>
+
+    <script>
+        let currentAudio = null;
+
+        function togglePlay(trackUrl, imgElement) {
+            if (currentAudio && currentAudio.src === trackUrl) {
+                if (currentAudio.paused) {
+                    currentAudio.play();
+                } else {
+                    currentAudio.pause();
+                }
+            } else {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+                currentAudio = new Audio(trackUrl);
+                currentAudio.play();
+                currentAudio.addEventListener('ended', () => currentAudio = null);
+            }
+        }
+
+        const token = "{{ access_token }}"; // Replace with your actual access token
+        const limit = 1;
+        const market = 'MY';
+
+        let current_track = {
+            id: '{{ current_track.id }}',
+            name: '{{ current_track.name }}',
+            artist: {
+                id: '{{ current_track.artist.id }}',
+                name: '{{ current_track.artist.name }}'
+            },
+            image_url: '{{ current_track.image_url }}',
+            preview_url: '{{ current_track.preview_url }}'
+        };
+
+        document.getElementById('like-button').addEventListener('click', () => {
+            handleFeedback('like');
+        });
+
+        document.getElementById('dislike-button').addEventListener('click', () => {
+            handleFeedback('dislike');
+        });
+
+        document.getElementById('add-to-playlist-button').addEventListener('click', () => {
+            handleFeedback('add-to-playlist');
+        });
+
+        document.getElementById('confirm-add-button').addEventListener('click', () => {
+            addToPlaylist();
+        });
+
+        function handleFeedback(feedback) {
+            const dropdownContainer = document.getElementById('dropdown-container');
+
+            if (feedback != 'add-to-playlist') {
+                console.log("CURRENT TRACK NAME", current_track.name);
+
+                let seedTracks = '';
+                if (feedback === 'like') {
+                    seedTracks = current_track.id;
+                }
+
+                const seedArtists = current_track.artist.id; // Use dynamic current artist ID
+                const seedGenres = ''; // Add seed genre if needed
+
+                const url = `https://api.spotify.com/v1/recommendations?limit=${limit}&market=${market}&seed_tracks=${seedTracks}&seed_artists=${seedArtists}&seed_genres=${seedGenres}`;
+
+                fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.tracks && data.tracks.length > 0) {
+                        const newTrack = data.tracks[0];
+                        updateTrack(newTrack);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching recommendations:', error);
+                });
+
+            } else {
+                if (dropdownContainer.style.display === 'block') {
+                    dropdownContainer.style.display = 'none';
+                } else {
+                    const user_id = '{{ user.id }}';
+                    console.log(user_id);
+                    const limit = 50; // Maximum limit supported by Spotify API
+                    let offset = 0;
+
+                    async function fetchAllPlaylists() {
+                        let allPlaylists = [];
+                        let morePlaylists = true;
+
+                        while (morePlaylists) {
+                            const url = `https://api.spotify.com/v1/users/${user_id}/playlists?limit=${limit}&offset=${offset}`;
+                            const response = await fetch(url, {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok ' + response.statusText);
+                            }
+
+                            const data = await response.json();
+                            if (data.items && data.items.length > 0) {
+                                allPlaylists = allPlaylists.concat(data.items);
+                                offset += data.items.length;
+                                morePlaylists = !!data.next; // If there's a next page, continue the loop
+                            } else {
+                                morePlaylists = false; // No more playlists
+                            }
+                        }
+
+                        populatePlaylistsDropdown(allPlaylists);
+                        dropdownContainer.style.display = 'block'; // Show dropdown
+                    }
+
+                    fetchAllPlaylists().catch(error => {
+                        console.error('Error fetching playlists:', error);
+                    });
+                }
+            }
+        }
+
+        function populatePlaylistsDropdown(playlists) {
+            const dropdown = document.getElementById('playlist-dropdown');
+            dropdown.innerHTML = ''; // Clear existing options
+
+            playlists.forEach(playlist => {
+                const option = document.createElement('option');
+                option.value = playlist.id;
+                option.textContent = playlist.name;
+                dropdown.appendChild(option);
+            });
+        }
+
+        function addToPlaylist() {
+            const selectedPlaylistId = document.getElementById('playlist-dropdown').value;
+            const trackId = current_track.id;
+            const url = `https://api.spotify.com/v1/playlists/${selectedPlaylistId}/tracks?uris=spotify:track:${trackId}`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Track added to playlist:', data);
+                document.getElementById('dropdown-container').style.display = 'none'; // Hide dropdown after adding
+            })
+            .catch(error => {
+                console.error('Error adding track to playlist:', error);
+            });
+        }
+
+        function updateTrack(track) {
+            console.log("Updating track to:", track);
+
+            document.getElementById('album-art').src = track.album.images[0].url;
+            document.getElementById('track-name').textContent = track.name;
+            document.getElementById('artist-name').textContent = track.artists.map(artist => artist.name).join(', ');
+            document.getElementById('album-art').onclick = () => togglePlay(track.preview_url, document.getElementById('album-art'));
+
+            if (track.preview_url == null) {
+                document.getElementById('preview').textContent = "No preview available";
+            } else {
+                document.getElementById('preview').textContent = "Click album art to preview";
+            }
+
+            current_track = {
+                id: track.id,
+                name: track.name,
+                artist: {
+                    id: track.artists[0].id,
+                    name: track.artists.map(artist => artist.name).join(', ')
+                },
+                image_url: track.album.images[0].url,
+                preview_url: track.preview_url
+            };
+
+            console.log("UPDATED TO", current_track);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("Initial load with track:", current_track);
+
+            const initialTrack = {
+                id: current_track.id,
+                album: {
+                    images: [{ url: current_track.image_url }]
+                },
+                name: current_track.name,
+                artists: [{ id: current_track.artist.id, name: current_track.artist.name }],
+                preview_url: current_track.preview_url
+            };
+            updateTrack(initialTrack);
+        });
+
+        const card = document.getElementById('card');
+        let startX;
+        let isDragging = false;
+
+        card.addEventListener('mousedown', (e) => {
+            startX = e.clientX;
+            isDragging = true;
+            card.style.transition = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - startX;
+                card.style.transform = `translateX(${deltaX}px)`;
+                card.style.opacity = 1 - Math.abs(deltaX) / 300;
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (isDragging) {
+                isDragging = false;
+                const deltaX = e.clientX - startX;
+                if (deltaX > 150) {
+                    handleFeedback('like');
+                    card.style.transform = `translateX(1000px)`;
+                } else if (deltaX < -150) {
+                    handleFeedback('dislike');
+                    card.style.transform = `translateX(-1000px)`;
+                } else {
+                    card.style.transform = 'translateX(0)';
+                    card.style.opacity = 1;
+                }
+                card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            }
+        });
+
+        card.addEventListener('transitionend', () => {
+            if (card.style.transform !== 'translateX(0)') {
+                card.style.transform = 'translateX(0)';
+                card.style.opacity = 1;
+                card.style.transition = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

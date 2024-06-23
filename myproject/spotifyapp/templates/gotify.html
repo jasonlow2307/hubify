@@ -1,0 +1,761 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{% static 'favicon_background.png' %}" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gotify - Guess the Spotify Song</title>
+    <style>
+        /* CSS Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1e1e1e;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: none;
+            max-width: 350px;
+        }
+
+        .form-container.active {
+            display: flex;
+        }
+
+        .form-container input,
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-container input {
+            background-color: #2c2c2c;
+            color: white;
+        }
+
+        .form-container button {
+            background-color: #1db954;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-container button:hover {
+            background-color: #1aa34a;
+        }
+
+        .form-container h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-container li {
+            padding-bottom: 10px;
+        }
+
+        .form-container ul {
+            text-align: left;
+            padding-left: 20px;
+            padding-bottom: 20px;
+        }
+
+        .card {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 300px;
+            background-color: #1e1e1e;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            text-align: center;
+            color: white;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .card.active {
+            display: flex;
+        }
+
+        .card img {
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+        }
+
+        .card .title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .card .artist {
+            font-size: 1.2rem;
+            color: #b3b3b3;
+        }
+
+        .card input,
+        .card button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .card input {
+            background-color: #2c2c2c;
+            color: white;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card button {
+            background-color: #1db954;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .card button:hover {
+            background-color: #1aa34a;
+        }
+
+        .card .points {
+            font-size: 1.0 rem;
+            color: #b3b3b3;
+            margin: 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .card #loading-message {
+            font-size: 1.0 rem;
+            color: #b3b3b3;
+            margin: 10px 0;
+        }
+
+        .highscore-message{
+            display: none;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            padding: 10px;
+        }
+
+        .timer-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 10px;
+            background-color: #1db954;
+            width: 100%;
+            transform: scaleX(1);
+            transform-origin: left;
+            transition: transform 15s linear;
+        }
+
+        .game-over-card {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1e1e1e;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            color: white;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .game-over-card.active {
+            display: flex;
+        }
+
+
+        .game-over-card button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            background-color: #1db954;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .game-over-card button:hover {
+            background-color: #1aa34a;
+        }
+
+        .leaderboard-card {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1e1e1e;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            color: white;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            max-width: 80%;
+            margin: 20px auto;
+        }
+
+        .leaderboard-card.active {
+            display: flex;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 10px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .leaderboard-table th {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .leaderboard-table td {
+            background-color: #2c2c2c;
+            color: #fff;
+        }
+
+        .leaderboard-table th, .leaderboard-table td {
+            font-size: 1rem;
+        }
+
+        .leaderboard-card button {
+            background-color: #1db954;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .leaderboard-card button:hover {
+            background-color: #1aa34a;
+        }
+    </style>
+</head>
+
+<body id="body">
+    <div class="timer-bar" id="timer-bar"></div>
+    <div class="form-container active" id="form-container">
+        <h1>Welcome To Gotify</h1>
+        <ul>
+            <li>Choose an artist</li>
+            <li>Guess their song quick!</li>
+            <li>Get a high score!</li>
+        </ul>
+        <form id="artist-form">
+            <input type="text" id="artist-name-input" placeholder="Artist Name" required>
+            <button type="submit" id="submit-artist">Submit</button>
+        </form>
+    </div>
+    <div class="card" id="card">
+        <img id="album-art" src="" alt="Album Art">
+        <div id="track-name" class="title"></div>
+        <div id="artist-name" class="artist"></div>
+        <input type="text" id="guess-input" placeholder="Enter your guess" required>
+        <button id="reveal">Reveal</button>
+        <div id="points" class="points">Points: 0</div>
+        <div id="loading-message" style="display: none;">Waiting for songs to load...</div>
+        <button id="next" style="display: none;">Next</button>
+    </div>
+    <div class="game-over-card" id="game-over-card">
+        <h2>Game Over!</h2>
+        <p id="final-points"></p>
+        <button id="restart">Restart</button>
+        <button id="leaderboard">Leaderboard</button>
+        <button id="home">Home</button>
+    </div>
+    <div class="leaderboard-card" id="leaderboard-card">
+        <h2>Leaderboard</h2>
+        <table class="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>High Score</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <!-- Leaderboard data will be appended here -->
+            </tbody>
+        </table>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.283.1.min.js"></script>
+    <script>
+        const token = "{{ access_token }}";
+        let artist = null;
+        let tracks = null;
+        let played_tracks = null;
+        let getAllSongs = false;
+
+        document.getElementById('artist-name-input').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('artist-form').dispatchEvent(new Event('submit', { 'bubbles': true }));
+            }
+        });
+
+        document.getElementById('guess-input').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('reveal').click();
+            }
+        });
+
+        document.getElementById('artist-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const artistName = document.getElementById('artist-name-input').value;
+            if (artistName) {
+                searchArtist(artistName)
+                .then(initial_artist => {
+                    artist = initial_artist;
+                    fetchInitialTrack(initial_artist.id);
+                    // Fetch subsequent songs in the background
+                    getArtistSongs(initial_artist.id)
+                        .then(songs => {
+                            console.log('Fetched Songs:', songs);
+                            tracks = songs;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching artist songs:', error);
+                        });
+                })
+                .catch(error => {
+                    console.error('Error fetching artist:', error);
+                });
+
+                document.getElementById('form-container').classList.remove('active');
+                document.getElementById('card').classList.add('active');
+            }
+        });
+
+        async function searchArtist(name) {
+            const params = {
+                'q': name,
+                'type': 'artist'
+            };
+            const url = `https://api.spotify.com/v1/search?${new URLSearchParams(params)}`;
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const artist = data.artists.items[0];
+                return artist;
+            } catch (error) {
+                console.error('Error fetching artist:', error);
+                return null;
+            }
+        }
+
+        function fetchInitialTrack(id) {
+            const url = `https://api.spotify.com/v1/artists/${id}/top-tracks?market=US`;
+
+            fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.tracks.length > 0) {
+                    let randomTrackIndex = Math.floor(Math.random() * data.tracks.length);
+                    let randomTrack = data.tracks[randomTrackIndex];
+                    const initialTrack = {
+                        'id': randomTrack.id
+                    };
+                    updateTrack(initialTrack);
+                    startTimer();
+                    played_tracks = [initialTrack];
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching initial track:', error);
+            });
+        }
+
+        async function getArtistSongs(id) {
+            const songs = [];
+            const params = {
+                'include_groups': 'album,single',
+                'limit': '50'
+            };
+
+            const url = `https://api.spotify.com/v1/artists/${id}/albums?${new URLSearchParams(params)}`;
+
+            try {
+                const albumResponse = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!albumResponse.ok) {
+                    throw new Error(`Error fetching albums: ${albumResponse.statusText}`);
+                }
+
+                const albumData = await albumResponse.json();
+
+                for (const album of albumData.items) {
+                    const albumId = album.id;
+                    const trackUrl = `https://api.spotify.com/v1/albums/${albumId}/tracks`;
+
+                    const trackResponse = await fetch(trackUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (!trackResponse.ok) {
+                        throw new Error(`Error fetching tracks: ${trackResponse.statusText}`);
+                    }
+
+                    const trackData = await trackResponse.json();
+
+                    for (const track of trackData.items) {
+                        if (track.preview_url == null) {
+                            continue;
+                        }
+                        const song = {
+                            name: track.name,
+                            id: track.id
+                        };
+                        songs.push(song);
+                    }
+                }
+                getAllSongs = true;
+                return songs;
+            } catch (error) {
+                console.error('Error fetching artist songs:', error);
+                return [];
+            }
+        }
+
+        let currentAudio = null;
+        let current_track = null;
+        let timerInterval = null;
+        let timerStartTime = null;
+        let turn = 0;
+
+        function togglePlay(trackUrl) {
+            if (currentAudio && currentAudio.src === trackUrl) {
+                if (currentAudio.paused) {
+                    currentAudio.play();
+                } else {
+                    currentAudio.pause();
+                }
+            } else {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+                currentAudio = new Audio(trackUrl);
+                currentAudio.play();
+                currentAudio.addEventListener('ended', () => currentAudio = null);
+            }
+        }
+
+        function updateTrack(track) {
+            const url = `https://api.spotify.com/v1/tracks/${track.id}`;
+
+            fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('album-art').onclick = () => togglePlay(data.preview_url);
+                track.image_url = data.album.images[0].url;
+                track.name = data.name;
+                track.artist = data.artists.map(artist => artist.name).join(', ');
+            })
+            .catch(error => {
+                console.error('Error fetching track details:', error);
+            });
+
+            document.getElementById('album-art').src = artist.images[0].url;
+            document.getElementById('track-name').textContent = "Guess The Track!";
+            document.getElementById('artist-name').textContent = artist.name;
+            current_track = track;
+        }
+
+        function startTimer() {
+            const timerBar = document.getElementById('timer-bar');
+            timerBar.style.transition = 'none';
+            timerBar.style.transform = 'scaleX(1)';
+            setTimeout(() => {
+                timerBar.style.transition = 'transform 15s linear';
+                timerBar.style.transform = 'scaleX(0)';
+            }, 20); // Small delay to allow the transition to apply
+
+            timerStartTime = Date.now();
+            console.log("Timer started")
+            timerInterval = setTimeout(() => {
+                handleFeedback("wrong");
+                revealTrack();
+                document.getElementById('reveal').style.display = "none";
+                document.getElementById('guess-input').style.display = "none";
+                document.getElementById('next').style.display = "block";
+            }, 15000);
+        }
+
+        function stopTimer() {
+            clearTimeout(timerInterval);
+            console.log("Timer stopped")
+            const timerBar = document.getElementById('timer-bar');
+            timerBar.style.transition = 'none';
+            timerBar.style.transform = 'scaleX(1)';
+        }
+
+        function revealTrack() {
+            stopTimer();
+            document.getElementById('album-art').src = current_track.image_url;
+            document.getElementById('track-name').textContent = current_track.name;
+            document.getElementById('artist-name').textContent = current_track.artist;
+        }
+
+        document.getElementById('reveal').addEventListener('click', () => {
+            turn += 1;
+            const guess = document.getElementById('guess-input').value;
+            const elapsed = (Date.now() - timerStartTime) / 1000;
+            if (current_track.name.toLowerCase().includes(guess.toLowerCase()) && guess.length > 0) {
+                console.log("CORRECT");
+                handleFeedback("correct", elapsed);
+            } else {
+                console.log("WRONG");
+                handleFeedback("wrong", elapsed);
+            }
+            revealTrack();
+            document.getElementById('reveal').style.display = "none";
+            document.getElementById('guess-input').style.display = "none";
+            document.getElementById('next').style.display = "block";
+        });
+
+        function handleFeedback(feedbackType, elapsedTime) {
+            let pointsElement = document.getElementById('points');
+            let currentPoints = parseInt(pointsElement.textContent.split(' ')[1]);
+            let newPoints = currentPoints;
+
+            if (feedbackType === "correct") {
+                newPoints += Math.max(1, Math.floor((15 - elapsedTime) * 10)); // More points for faster answers
+                document.getElementById('body').style.backgroundColor = "#1db954";
+                const audio = new Audio('{% static "correct.mp3" %}');
+                audio.play();
+            } else {
+                newPoints -= 1;
+                document.getElementById('body').style.backgroundColor = "#ff0000";
+                const audio = new Audio('{% static "wrong.mp3" %}');
+                const timerBar = document.getElementById('timer-bar');
+                timerBar.style.backgroundColor = '#ff0000';
+                audio.play();
+            }
+
+            pointsElement.textContent = `Points: ${newPoints}`;
+        }
+
+
+        function checkGameOver(currentPoints) {
+            if (turn == 5) {
+                stopTimer();
+                document.getElementById('card').classList.remove('active');
+                document.getElementById('game-over-card').classList.add('active');
+                document.getElementById('final-points').textContent = `Final Points: ${currentPoints}`;
+
+                
+                AWS.config.update({
+                    accessKeyId: '{{ context.AWS_ACCESS_KEY_ID }}',
+                    secretAccessKey: '{{ context.AWS_SECRET_ACCESS_KEY }}',
+                    region: '{{ context.AWS_SES_REGION_NAME }}'
+                });
+
+                const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+                const params = {
+                    TableName: 'hubify-gotify-leaderboard',
+                    Item: {
+                        id: ' {{user.display_name}}', 
+                        score: currentPoints
+                    }
+                };
+
+                dynamodb.put(params, (err, data) => {
+                    if (err) {
+                        console.error('Error updating score:', err);
+                    } else {
+                        console.log('Score updated successfully');
+                    }
+                });
+                
+            }
+        }
+
+
+        document.getElementById('next').addEventListener('click', () => {
+            if (getAllSongs) {
+                // In case loading message is visible
+                document.getElementById('loading-message').style.display = 'none';
+
+                // Clear the timer bar transition
+                const timerBar = document.getElementById('timer-bar');
+                timerBar.style.transition = 'none';
+                timerBar.style.transform = 'scaleX(1)';
+                timerBar.style.backgroundColor = '#1db954';
+
+                // Reset the background color and timer
+                document.getElementById('body').style.backgroundColor = "#121212";
+                startTimer();
+
+                // Show buttons and reset input
+                document.getElementById('reveal').style.display = "inline";
+                document.getElementById('guess-input').style.display = "inline";
+                document.getElementById('guess-input').value = "";
+                document.getElementById('next').style.display = "none";
+                
+                // Stop any currently playing audio
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+
+                // Generate a new random track
+                generateRandomTrack();
+
+                let pointsElement = document.getElementById('points');
+                let currentPoints = parseInt(pointsElement.textContent.split(' ')[1]);
+                checkGameOver(currentPoints); // Pass the new points to checkGameOver
+            } else {
+                document.getElementById('loading-message').style.display = 'block';
+                console.log('Waiting for songs to load...');
+            }
+        });
+
+        function generateRandomTrack() {
+            let randomTrack;
+            do {
+                randomTrackIndex = Math.floor(Math.random() * tracks.length);
+                randomTrack = tracks[randomTrackIndex];
+            } while (played_tracks.includes(randomTrack));
+            console.log(randomTrack);
+            updateTrack(randomTrack);
+            played_tracks.push(randomTrack);
+        }
+
+        document.getElementById('restart').addEventListener('click', () => {
+            location.reload();
+        });
+
+        document.getElementById('home').addEventListener('click', () => {
+            window.location.href = "/index";
+        });
+
+        document.getElementById('leaderboard').addEventListener('click', function () {
+            fetchLeaderboardData();
+            document.getElementById('game-over-card').classList.remove('active');
+            document.getElementById('leaderboard-card').classList.add('active');
+        });
+
+        function fetchLeaderboardData() {
+            AWS.config.update({
+                accessKeyId: '{{ context.AWS_ACCESS_KEY_ID }}',
+                secretAccessKey: '{{ context.AWS_SECRET_ACCESS_KEY }}',
+                region: '{{ context.AWS_SES_REGION_NAME }}'
+            });
+
+            const docClient = new AWS.DynamoDB.DocumentClient();
+            const params = {
+                TableName: 'hubify-gotify-leaderboard'
+            };
+
+            docClient.scan(params, function (err, data) {
+                if (err) {
+                    console.error('Unable to scan the table. Error:', JSON.stringify(err, null, 2));
+                } else {
+                    console.log('Scan succeeded.');
+                    const leaderboardBody = document.getElementById('leaderboard-body');
+                    leaderboardBody.innerHTML = ''; // Clear existing rows
+
+                    if (!data.Items || data.Items.length === 0) {
+                        console.log('No items found.');
+                        return;
+                    }
+
+                    data.Items.sort((a, b) => b.Score - a.Score); // Sort by score, descending
+
+                    data.Items.forEach(item => {
+                        console.log('Item:', item); // Debug log for each item
+                        const row = document.createElement('tr');
+                        const idCell = document.createElement('td');
+                        idCell.textContent = item.id;
+                        const scoreCell = document.createElement('td');
+                        scoreCell.textContent = item.score;
+
+                        row.appendChild(idCell);
+                        row.appendChild(scoreCell);
+                        leaderboardBody.appendChild(row);
+                    });
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>
