@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="{% static 'favicon_background.png' %}" type="image/x-icon">
+    <title>Authenticate with Spotify</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff; /* White background */
+            color: #000000; /* Black text */
+            margin: 0;
+            padding: 0;
+            display: flex; /* Use flexbox */
+            flex-direction: column; /* Align items in a column */
+            justify-content: center; /* Center vertically */
+            align-items: center; /* Center horizontally */
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #1db954; /* Spotify green */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        p {
+            font-size: 1.2em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        button {
+            background-color: #1db954; /* Spotify green */
+            color: #ffffff; /* White text */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #15883e; /* Slightly darker green on hover */
+        }
+
+        .container {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #1db954;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Authenticate with Spotify</h1>
+        <p>Click the button below to login with Spotify:</p>
+        <form action="{% url 'login_form' %}" method="get" onsubmit="showLoading()">
+            <button type="submit">Login with Spotify</button>
+        </form>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loading-text">Registering user...</p>
+            <script>
+                setTimeout(function() {
+                    document.getElementById('loading-text').innerText = 'Almost There...';
+                    setTimeout(function() {
+                        document.getElementById('loading-text').innerText = 'Hang On...';
+                    }, 8000);
+                }, 8000);
+            </script>
+        </div>
+    </div>
+    <script>
+        function showLoading() {
+            document.querySelector('button[type="submit"]').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
