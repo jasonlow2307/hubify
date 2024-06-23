@@ -17,7 +17,8 @@ Hubify is a Spotify API app that offers a variety of features to enhance your mu
 ### Spotimatch
 ![Spotimatch](screenshots/spotimatch.jpeg)
 - A Tinder-like page that recommends songs based on your feedback.
-- Allows you to add songs to your playlist with a simple swipe.
+- Allows you to add recommended songs to your playlist
+- Allows you to rate songs to with a simple swipe.
 ![SpotimatchSwipe](screenshots/spotimatch_swipe.gif)
 
 ### Gotify
