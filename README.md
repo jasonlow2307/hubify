@@ -9,7 +9,7 @@ Hubify is a Spotify API app that offers a variety of features to enhance your mu
 - [🖼️ Note](#Note)
 <br><br>
 
-## <a name="Features"></a> Features
+## <a id="Features"></a> 🎵 Features
 
 ### Playing Preview of a Song
 - Anytime you see an album cover, you can click it to play a short preview of the song
@@ -35,13 +35,13 @@ Hubify is a Spotify API app that offers a variety of features to enhance your mu
 ![GotifyCorrect](screenshots/gotify_correct.jpeg)
 ![GotifyWrong](screenshots/gotify_wrong.jpeg)
 
-## <a name="Try_It_Out"></a> Try It Out
+## <a id="Try_It_Out"></a> 🖥️ Try It Out
 
 You can explore all these features at [Hubify](https://hubify.onrender.com).
 
 Please note, Hubify is currently using the development mode of the Spotify API, which doesn't allow automatic user registration. You can register at the above link and wait for me to approve your request.
 
-## <a name="Instructions"></a> Instructions
+## <a id="Instructions"></a> 🗺️ Instructions
 
 1. Clone the repository
 2. Navigate to hubify/myproject/myproject/settings.py
@@ -62,7 +62,7 @@ Please note, Hubify is currently using the development mode of the Spotify API, 
 
 ---
 
-## <a name="Note"></a> Note
+## <a id="Note"></a> 🖼️ Note
 
 Please note that Hubify is a personal project and is not intended for enterprise use. It is a passion project developed by me to enhance my music listening experience. While I strive to provide a seamless and enjoyable user experience, please understand that Hubify may not have the same level of robustness and scalability as enterprise-grade applications. Thank you for your understanding and for trying out Hubify!
 
