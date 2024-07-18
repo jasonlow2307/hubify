@@ -3,10 +3,10 @@
 Hubify is a Spotify API app that offers a variety of features to enhance your music listening experience.
 
 ## Contents
-- [🎵 Features](#Features)
-- [🖥️ Try It Out](#Try_It_Out)
-- [🗺️ Instructions](#Intructions)
-- [🖼️ Note](#Note)
+- [🎵 Features](https://github.com/jasonlow2307/hubify/blob/main/README.md#--features)
+- [🖥️ Try It Out](https://github.com/jasonlow2307/hubify/blob/main/README.md#-%EF%B8%8F-try-it-out)
+- [🗺️ Instructions](https://github.com/jasonlow2307/hubify/blob/main/README.md#-%EF%B8%8F-instructions)
+- [🖼️ Note](https://github.com/jasonlow2307/hubify/blob/main/README.md#-%EF%B8%8F-note)
 <br><br>
 
 ## <a id="Features"></a> 🎵 Features
