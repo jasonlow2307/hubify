@@ -3,7 +3,7 @@
 Hubify is a Spotify API app that offers a variety of features to enhance your music listening experience.
 
 ## Contents
-- [🎵 Plan](#Features)
+- [🎵 Features](#Features)
 - [🖥️ Try It Out](#Try_It_Out)
 - [🗺️ Instructions](#Intructions)
 - [🖼️ Note](#Note)
@@ -46,7 +46,8 @@ Please note, Hubify is currently using the development mode of the Spotify API, 
 1. Clone the repository
 2. Navigate to hubify/myproject/myproject/settings.py
 3. Fill in Spotify API credentials and AWS credentials in the fields below
-  `# Spotify API credentials
+```
+   # Spotify API credentials
   SPOTIFY_CLIENT_ID = 'your_spotify_client_id'
   SPOTIFY_CLIENT_SECRET = 'your_spotify_client_secret'
   SPOTIFY_REDIRECT_URI = 'your_redirect_uri'
@@ -55,6 +56,7 @@ Please note, Hubify is currently using the development mode of the Spotify API, 
   AWS_ACCESS_KEY_ID = 'your_aws_access_key_id'
   AWS_SECRET_ACCESS_KEY = 'your_aws_secret_access_key'
   AWS_SES_REGION_NAME = 'your_aws_region_name'`
+```
 4. Navigate to hubify/myproject
 5. Run `python manage.py runserver`
 
